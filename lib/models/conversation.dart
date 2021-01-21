@@ -1,9 +1,12 @@
+import 'message.dart';
+
 /// This is the class which contains the details of the conversation.
 class Conversation {
   /// The account ID used for the conversation.
   String accountId;
 
-  /// Who has the conversation assigned on the papercups dashboard.
+  /// Who has the conversation assigned on the papercups dashboard, is an integer
+  /// but converted to string so it can be nullable.
   String asigneeId;
 
   /// When the conversation was created.
@@ -25,6 +28,16 @@ class Conversation {
   /// The status of a conversation, can be open or closed.
   String status;
 
+  /// Messages part of a conversation
+  List<PapercupsMessage> messages;
+  PapercupsMessage get first {
+    return messages.isNotEmpty ? messages[0] : null;
+  }
+
+  PapercupsMessage get last {
+    return messages.isNotEmpty ? messages[messages.length - 1] : null;
+  }
+
   Conversation({
     this.accountId,
     this.asigneeId,
@@ -34,5 +47,6 @@ class Conversation {
     this.priority,
     this.read,
     this.status,
+    this.messages,
   });
 }

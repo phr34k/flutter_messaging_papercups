@@ -6,16 +6,16 @@ import '../papercups_flutter.dart';
 
 import '../models/models.dart';
 
-/// This function is used to update customer details on the Papercups server.
-Future<PapercupsCustomer> updateUserMetadata(
+updateUserMetadataEx(
   Props p,
+  PapercupsCustomer c,
   String cId, {
   Client client,
 }) async {
   if (client == null) {
     client = Client();
   }
-  PapercupsCustomer c;
+  //PapercupsCustomer c;
   var json = p.customer.toJsonString();
   try {
     var res = await client.put(

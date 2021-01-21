@@ -6,7 +6,7 @@ import '../models/models.dart';
 
 /// This function will get the conversation details that we need in order to join the room.
 /// The most important detail is the ID, and this will return a **new** conversation.
-Future<Conversation> getConversationDetails(
+Future<Conversation> createConversation(
   Props p,
   Conversation conv,
   PapercupsCustomer customer,
@@ -18,6 +18,7 @@ Future<Conversation> getConversationDetails(
   }
 
   try {
+    print("getConversationDetails ${customer.id} ${customer.externalId}");
     var res = await client.post(
       "https://" + p.baseUrl + "/api/conversations",
       headers: {
@@ -32,6 +33,7 @@ Future<Conversation> getConversationDetails(
         },
       ),
     );
+
     var data = jsonDecode(res.body)["data"];
     conv = Conversation(
       id: data["id"],
@@ -40,7 +42,9 @@ Future<Conversation> getConversationDetails(
       asigneeId: data["asignee_id"],
       createdAt: data["created_at"],
       read: data["read"],
+      messages: conv.messages,
     );
+
     sc(conv);
   } catch (e) {
     conv = null;
