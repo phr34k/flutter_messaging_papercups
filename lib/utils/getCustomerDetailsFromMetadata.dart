@@ -6,11 +6,11 @@ import '../models/models.dart';
 
 /// This funtction is used to get the customer details from Papercups.
 /// This is the function responsible for finding the Customer's ID.
-Future<PapercupsCustomer> getCustomerDetailsFromMetadata(
+Future<PapercupsCustomer?> getCustomerDetailsFromMetadata(
   Props p,
-  PapercupsCustomer c,
-  Function sc, {
-  Client client,
+  PapercupsCustomer? c,
+  Function? sc, {
+  Client? client,
 }) async {
   if (client == null) {
     client = Client();
@@ -22,7 +22,7 @@ Future<PapercupsCustomer> getCustomerDetailsFromMetadata(
         p.baseUrl,
         "/api/customers/identify",
         {
-          "external_id": p.customer.externalId,
+          "external_id": p.customer?.externalId,
           "account_id": p.accountId,
         },
       ),
@@ -46,7 +46,7 @@ Future<PapercupsCustomer> getCustomerDetailsFromMetadata(
     c = null;
   }
   // Function to set the client.
-  sc(c);
+  if (sc != null) sc(c);
   // Closing HTTP client.
   client.close();
   // Returns customer.

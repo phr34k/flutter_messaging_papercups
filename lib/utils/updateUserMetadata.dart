@@ -2,21 +2,20 @@
 import 'dart:convert';
 
 import 'package:http/http.dart';
-import '../papercups_flutter.dart';
 
 import '../models/models.dart';
 
 updateUserMetadataEx(
   Props p,
-  PapercupsCustomer c,
+  PapercupsCustomer? c,
   String cId, {
-  Client client,
+  Client? client,
 }) async {
   if (client == null) {
     client = Client();
   }
   //PapercupsCustomer c;
-  var json = p.customer.toJsonString();
+  var json = p.customer!.toJsonString();
   try {
     var res = await client.put(
       Uri.https(p.baseUrl, "/api/customers/$cId/metadata"),

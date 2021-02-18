@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -16,15 +15,15 @@ class ChatMessages extends StatelessWidget {
   final timeagoLocale;
   final String sendingText;
   final String sentText;
-  final Function(String) copied;
-  final Color colorTextLeft;
-  final Color colorTextRight;
-  final Color colorLeft;
-  final Color colorRight;
-  final Gradient gradientLeft;
-  final Gradient gradientRight;
-  final BorderRadiusGeometry borderRadiusGeometryLeft;
-  final BorderRadiusGeometry borderRadiusGeometryRight;
+  final Function(String)? copied;
+  final Color? colorTextLeft;
+  final Color? colorTextRight;
+  final Color? colorLeft;
+  final Color? colorRight;
+  final Gradient? gradientLeft;
+  final Gradient? gradientRight;
+  final BorderRadiusGeometry? borderRadiusGeometryLeft;
+  final BorderRadiusGeometry? borderRadiusGeometryRight;
   final bool showAvatar;
 
   ChatMessages(
@@ -46,7 +45,7 @@ class ChatMessages extends StatelessWidget {
     this.borderRadiusGeometryRight,
     this.showAvatar = true,
     this.copied,
-    Key key,
+    Key? key,
   }) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -55,7 +54,7 @@ class ChatMessages extends StatelessWidget {
         alignment: Alignment.topCenter,
         child: NotificationListener<OverscrollIndicatorNotification>(
           onNotification: (OverscrollIndicatorNotification overscroll) {
-            overscroll.disallowGlow();
+            overscroll.disallowIndicator();
             return false;
           },
           child: ListView.builder(
@@ -87,16 +86,16 @@ class ChatMessages extends StatelessWidget {
 
 class ChatMessage extends StatefulWidget {
   const ChatMessage({
-    Key key,
-    @required this.container,
-    @required this.index,
-    @required this.props,
-    @required this.sending,
-    @required this.maxWidth,
-    @required this.locale,
-    @required this.timeagoLocale,
-    @required this.sendingText,
-    @required this.sentText,
+    Key? key,
+    required this.container,
+    required this.index,
+    required this.props,
+    required this.sending,
+    required this.maxWidth,
+    required this.locale,
+    required this.timeagoLocale,
+    required this.sendingText,
+    required this.sentText,
   }) : super(key: key);
 
   final ChatMessages container;
@@ -117,12 +116,12 @@ class _ChatMessageState extends State<ChatMessage> {
   double opacity = 0;
   double maxWidth = 0;
   bool isTimeSentVisible = false;
-  String longDay;
-  Timer timer;
+  String? longDay;
+  Timer? timer;
 
   @override
   void dispose() {
-    if (timer != null) timer.cancel();
+    timer?.cancel();
     super.dispose();
   }
 
@@ -157,7 +156,7 @@ class _ChatMessageState extends State<ChatMessage> {
     var isFirst = widget.index == 0;
 
     if (!isLast) {
-      DateTime sendTime = nextMsg.sentAt.toLocal();
+      DateTime sendTime = nextMsg.sentAt!.toLocal();
       if ((sendTime.day != sendTime.day) && longDay == null) {
         try {
           longDay = DateFormat.yMMMMd(widget.locale).format(sendTime.toLocal());
@@ -177,7 +176,7 @@ class _ChatMessageState extends State<ChatMessage> {
           setState(() {});
         }
       });
-    if (!isLast && timer != null) timer.cancel();
+    if (!isLast && timer != null) timer?.cancel();
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -185,7 +184,7 @@ class _ChatMessageState extends State<ChatMessage> {
         });
       },
       onLongPress: () {
-        widget.container.copied(msg.body);
+        widget.container.copied!(msg.body!);
       },
       onTapUp: (_) {
         Timer(
@@ -236,17 +235,18 @@ class _ChatMessageState extends State<ChatMessage> {
                               radius: 16,
                               backgroundColor: Colors.transparent,
                               backgroundImage:
-                                  (msg.user.profilePhotoUrl != null)
-                                      ? NetworkImage(msg.user.profilePhotoUrl)
+                                  (msg.user?.profilePhotoUrl != null)
+                                      ? NetworkImage(msg.user!.profilePhotoUrl!)
                                       : null,
-                              child: (msg.user.profilePhotoUrl != null)
+                              child: (msg.user?.profilePhotoUrl != null)
                                   ? null
                                   : (msg.user != null &&
-                                          msg.user.fullName == null)
+                                          msg.user?.fullName == null)
                                       ? Text(
-                                          msg.user.email
-                                              .substring(0, 1)
-                                              .toUpperCase(),
+                                          msg.user?.email
+                                                  ?.substring(0, 1)
+                                                  .toUpperCase() ??
+                                              "",
                                           style: TextStyle(
                                               color: userSent
                                                   ? widget
@@ -255,9 +255,10 @@ class _ChatMessageState extends State<ChatMessage> {
                                                       .colorTextRight),
                                         )
                                       : Text(
-                                          msg.user.fullName
-                                              .substring(0, 1)
-                                              .toUpperCase(),
+                                          msg.user?.fullName
+                                                  ?.substring(0, 1)
+                                                  .toUpperCase() ??
+                                              "",
                                           style: TextStyle(
                                               color: userSent
                                                   ? widget
@@ -302,7 +303,7 @@ class _ChatMessageState extends State<ChatMessage> {
                     horizontal: 14,
                   ),
                   child: MarkdownBody(
-                    data: text,
+                    data: text ?? "",
                     styleSheet: MarkdownStyleSheet(
                       p: TextStyle(
                         color: userSent
@@ -312,12 +313,12 @@ class _ChatMessageState extends State<ChatMessage> {
                       a: TextStyle(
                         color: userSent
                             ? Colors.white
-                            : Theme.of(context).textTheme.bodyText1.color,
+                            : Theme.of(context).textTheme.bodyText1?.color,
                       ),
                       blockquotePadding: EdgeInsets.only(left: 14),
                       blockquoteDecoration: BoxDecoration(
                           border: Border(
-                        left: BorderSide(color: Colors.grey[300], width: 4),
+                        left: BorderSide(color: Colors.grey[300]!, width: 4),
                       )),
                     ),
                   ),
@@ -333,9 +334,9 @@ class _ChatMessageState extends State<ChatMessage> {
             if (!userSent && ((nextMsg.userId != msg.userId) || (isLast)))
               Padding(
                   padding: EdgeInsets.only(left: 16, bottom: 5, top: 4),
-                  child: (msg.user.fullName == null)
+                  child: (msg.user?.fullName == null)
                       ? Text(
-                          msg.user.email,
+                          msg.user?.email ?? "",
                           style: TextStyle(
                             color: Theme.of(context)
                                 .disabledColor
@@ -344,7 +345,7 @@ class _ChatMessageState extends State<ChatMessage> {
                           ),
                         )
                       : Text(
-                          msg.user.fullName,
+                          msg.user?.fullName ?? "",
                           style: TextStyle(
                             color: Theme.of(context)
                                 .disabledColor
@@ -363,7 +364,7 @@ class _ChatMessageState extends State<ChatMessage> {
                 child: Text(
                   widget.sending
                       ? widget.sendingText
-                      : "${widget.sentText} ${timeago.format(msg.sentAt.toLocal())}",
+                      : "${widget.sentText} ${timeago.format(msg.sentAt!.toLocal())}",
                   textAlign: TextAlign.end,
                   style: TextStyle(color: Colors.grey),
                 ),
@@ -379,7 +380,7 @@ class _ChatMessageState extends State<ChatMessage> {
                   margin: EdgeInsets.all(15),
                   width: double.infinity,
                   child: Text(
-                    longDay,
+                    longDay!,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.grey,
@@ -396,10 +397,10 @@ class _ChatMessageState extends State<ChatMessage> {
 
 class TimeWidget extends StatelessWidget {
   const TimeWidget({
-    Key key,
-    @required this.userSent,
-    @required this.msg,
-    @required this.isVisible,
+    Key? key,
+    required this.userSent,
+    required this.msg,
+    required this.isVisible,
   }) : super(key: key);
 
   final bool userSent;
@@ -415,9 +416,9 @@ class TimeWidget extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.only(bottom: 5.0, left: 4, right: 4),
         child: Text(
-          TimeOfDay.fromDateTime(msg.sentAt.toLocal()).format(context),
+          TimeOfDay.fromDateTime(msg.sentAt!.toLocal()).format(context),
           style: TextStyle(
-            color: Theme.of(context).textTheme.bodyText1.color.withAlpha(100),
+            color: Theme.of(context).textTheme.bodyText1?.color?.withAlpha(100),
             fontSize: 10,
           ),
         ),

@@ -36,13 +36,13 @@ class PaperCupsWidgetB extends StatefulWidget {
   final String sentText;
 
   /// If not null, close button will be shown.
-  final Function closeAction;
+  final void Function()? closeAction;
 
   /// Set to true in order to make the send message section float
   final bool floatingSendMessage;
 
   PaperCupsWidgetB({
-    @required this.props,
+    required this.props,
     this.dateLocale = "en-US",
     this.timeagoLocale,
     this.sendingText = "Sending...",
@@ -56,9 +56,9 @@ class PaperCupsWidgetB extends StatefulWidget {
 }
 
 class ConversationPair {
-  final PapercupsCustomer customer;
-  final Conversation conversation;
-  final PhoenixChannel channel;
+  final PapercupsCustomer? customer;
+  final Conversation? conversation;
+  final PhoenixChannel? channel;
   ConversationPair({
     this.customer,
     this.conversation,
@@ -67,8 +67,8 @@ class ConversationPair {
 }
 
 class Update {
-  Conversation oldConversation;
-  Conversation newConversation;
+  Conversation? oldConversation;
+  Conversation? newConversation;
   Update(
     this.oldConversation,
     this.newConversation,
@@ -79,21 +79,21 @@ class PaperCupsController {
   final _logger = Logger('papercups.controller');
   StreamController stateStreamController = StreamController.broadcast();
   // ignore: unused_field
-  Stream<PaperCupsConnectedEvent> openStream;
+  Stream<PaperCupsConnectedEvent>? openStream;
   // ignore: unused_field
-  Stream<PaperCupsDisconnectedEvent> closeStream;
+  Stream<PaperCupsDisconnectedEvent>? closeStream;
   // ignore: unused_field
-  Stream<PaperCupsConversationMessageStatusEvent> sendingStatusChanged;
+  Stream<PaperCupsConversationMessageStatusEvent>? sendingStatusChanged;
   // internal main phoenix socket that manages various subchannels (basically websockets)
-  PhoenixSocket _socket;
+  PhoenixSocket? _socket;
   // internal phoenix channel listenng to chatter of an account
-  PhoenixChannel _channel;
+  PhoenixChannel? _channel;
   // internal phoenix channels listening to chatter of a conversation
   Map<String, PhoenixChannel> _conversationChannel = {};
   // internal conversations that are monitored on the same socket
   Map<String, Conversation> conversations = {};
   // internal the current identified customer
-  PapercupsCustomer _customer;
+  PapercupsCustomer? _customer;
   // internal rebuild function
   //RebuildFunction rebuild;
   //SetConversationFunction setConversation;
@@ -104,12 +104,12 @@ class PaperCupsController {
   //String _conversationId;
   //bool noConnection = false;
 
-  PapercupsCustomer get customer {
+  PapercupsCustomer? get customer {
     return _customer;
   }
 
   bool get isConnected {
-    return _socket != null && _socket.isConnected;
+    return _socket?.isConnected ?? false;
   }
 
   void initStateA(Props props) {
@@ -120,9 +120,9 @@ class PaperCupsController {
       throw "Expected either primaryColor or primaryGradient to be null";
     if (props.customer != null) {
       setCustomer(PapercupsCustomer(
-        email: props.customer.email,
-        externalId: props.customer.externalId,
-        name: props.customer.name,
+        email: props.customer?.email,
+        externalId: props.customer?.externalId,
+        name: props.customer?.name,
       ));
     }
 
@@ -137,8 +137,8 @@ class PaperCupsController {
         .cast<PaperCupsConversationMessageStatusEvent>();
   }
 
-  Future<PhoenixSocket> connect(Props props,
-      {bool retry, PhoenixSocketOptions options}) {
+  Future<PhoenixSocket?> connect(Props props,
+      {bool retry = false, PhoenixSocketOptions? options}) {
     if (_socket == null) {
       _logger.log(Level.FINEST, "connecting to server...");
 
@@ -148,15 +148,15 @@ class PaperCupsController {
       } catch (e) {
         _logger.log(Level.SEVERE, "connecting had an exception... ${e}", e);
         _socket = null;
-        return Future<PhoenixSocket>.value(null);
+        return Future<PhoenixSocket?>.value(null);
       }
 
-      _socket.closeStream.listen((event) {
+      _socket?.closeStream.listen((event) {
         _logger.log(Level.FINEST, "stream closed....");
         stateStreamController.add(PaperCupsDisconnectedEvent());
       });
 
-      _socket.openStream.listen(
+      _socket?.openStream.listen(
         (event) {
           _logger.log(Level.FINEST, "stream opened....");
           _channel = initChannelsEx(_socket, props, null);
@@ -164,7 +164,7 @@ class PaperCupsController {
         },
       );
 
-      _socket.errorStream.listen((event) {
+      _socket?.errorStream.listen((event) {
         _logger.log(Level.SEVERE, "stream errored....", event);
         stateStreamController.addError(event);
       });
@@ -175,7 +175,7 @@ class PaperCupsController {
       });
       */
       _logger.log(Level.FINEST, "connecting....");
-      _socket.connect();
+      _socket?.connect();
       _logger.log(Level.FINEST, "connecting done....");
 
       return Future<PhoenixSocket>.value(_socket);
@@ -189,23 +189,23 @@ class PaperCupsController {
   //void onconversationloaded(String conversationId);
   //void onconversationunloaded(String conversationId);
 
-  void setConversationChannel(String convId, PhoenixChannel c) {
+  void setConversationChannel(String? convId, PhoenixChannel? c) {
     if (c == null) {
       if (_conversationChannel.containsKey(convId)) {
-        PhoenixChannel previous = _conversationChannel[convId];
+        PhoenixChannel previous = _conversationChannel[convId]!;
         if (previous.state != PhoenixChannelState.closed) {
           previous.close();
         }
         _conversationChannel.remove(convId);
       }
     } else {
-      _conversationChannel[convId] = c;
+      _conversationChannel[convId!] = c;
     }
   }
 
   void disposeA() {
-    if (_channel != null) _channel.close();
-    if (_socket != null) _socket.dispose();
+    _channel?.close();
+    _socket?.dispose();
     if (_conversationChannel.isNotEmpty) {
       _conversationChannel.forEach((key, value) {
         value.close();
@@ -214,13 +214,13 @@ class PaperCupsController {
     }
   }
 
-  Future<PhoenixChannel> join(Conversation conversation) async {
+  Future<PhoenixChannel> join(Conversation? conversation) async {
     assert(conversation != null);
 
     var statusEvents = StreamController<PaperCupsConversationEvent>();
     var controller = StreamController<List<PapercupsMessage>>();
     controller.stream.listen((messages) {
-      conversations[conversation.id].messages.addAll(messages);
+      conversations[conversation!.id]!.messages!.addAll(messages);
       stateStreamController.add(PaperCupsConversationMessageReceivedEvent(
         messages: messages,
       ));
@@ -231,19 +231,19 @@ class PaperCupsController {
     statusEvents.stream.listen((event) {
       //Set the conversation channel
       if (event is PaperCupsConversationConnectedEvent) {
-        setConversationChannel(conversation.id, event.channel);
+        setConversationChannel(conversation!.id, event.channel);
       }
       // Unset the conversation channel
       else if (event is PaperCupsConversationDisconnectedEvent) {
-        setConversationChannel(conversation.id, null);
+        setConversationChannel(conversation!.id, null);
       }
     });
 
     var conv = joinConversationAndListenEx(
-      convId: conversation.id,
+      convId: conversation!.id!,
       eventsController: statusEvents,
       controller: controller,
-      socket: _socket,
+      socket: _socket!,
     );
 
     return conv;
@@ -256,14 +256,14 @@ class PaperCupsController {
   }
 
   //Identify the customer
-  Future<PapercupsCustomer> identify(Props props, {bool create = false}) {
+  Future<PapercupsCustomer?> identify(Props props, {bool create = false}) {
     _logger.log(Level.FINEST, "find identity of the customer....");
 
     if (props.customer != null &&
-        props.customer.externalId != null &&
-        (_customer.id == null || _customer.createdAt == null)) {
+        props.customer?.externalId != null &&
+        (_customer?.id == null || _customer?.createdAt == null)) {
       if (create == true &&
-          (_customer.id == null || _customer.createdAt == null)) {
+          (_customer?.id == null || _customer?.createdAt == null)) {
         _logger.log(Level.FINEST, "identity getCustomerDetails");
         return getCustomerDetails(props, _customer, setCustomer);
       } else {
@@ -285,13 +285,13 @@ class PaperCupsController {
   }
 
   Future<ConversationPair> getConversation(Props props,
-      {bool joins,
-      Conversation conversation,
-      Future<PapercupsCustomer> customer,
-      PaperCupsViewController view}) async {
+      {required bool joins,
+      Conversation? conversation,
+      required Future<PapercupsCustomer?> customer,
+      required PaperCupsViewController view}) async {
     if (conversation != null && conversation.id != null) {
-      PapercupsCustomer identifiedCustomer = await customer;
-      PhoenixChannel channel = _conversationChannel[conversation.id];
+      PapercupsCustomer? identifiedCustomer = await customer;
+      PhoenixChannel? channel = _conversationChannel[conversation.id];
       if (channel != null) {
         return Future<ConversationPair>.value(ConversationPair(
             conversation: conversation,
@@ -314,16 +314,16 @@ class PaperCupsController {
     } else {
       var completer = Completer<ConversationPair>();
       customer.then((identifiedCustomer) {
-        var customerId = identifiedCustomer.id;
+        var customerId = identifiedCustomer!.id;
         createConversation(props, conversation, _customer, (Conversation a) {
           view._conversation = a;
           stateStreamController
               .add(PaperCupsConversationNavigatedEvent(a, false));
         }).then((conversationDetails) {
           // Check if the conversation fullfills the basic requirements
-          assert(conversationDetails.customerId == customerId &&
+          assert(conversationDetails!.customerId == customerId &&
               conversationDetails.id != null);
-          conversations[conversationDetails.id] = conversationDetails;
+          conversations[conversationDetails!.id!] = conversationDetails;
           //_conversationId = conversationDetails.id;
           join(conversationDetails).then((conv) {
             completer.complete(ConversationPair(
@@ -343,7 +343,7 @@ class PaperCupsController {
     }
   }
 
-  Future<Update> fetch(Props props, Conversation conversation,
+  Future<Update> fetch(Props props, Conversation? conversation,
       {bool noDefaultLoad = false}) {
     Completer<Update> _completer = Completer<Update>();
     _logger.log(Level.FINEST, "fetch to ${conversation}");
@@ -359,17 +359,21 @@ class PaperCupsController {
         } else {
           conversations.clear();
           if (inbox.conversations != null)
-            conversations.addAll(inbox.conversations);
+            conversations.addAll(inbox.conversations!);
 
-          String selectedChannel = null;
+          String? selectedChannel = null;
           if (conversation == null &&
               inbox.conversationId != null &&
               noDefaultLoad == false)
             selectedChannel = inbox.conversationId;
           else
-            selectedChannel = conversation != null ? conversation.id : null;
+            selectedChannel = conversation?.id;
 
-          var result = Update(conversation, Conversation(id: selectedChannel));
+          var result = Update(
+              conversation,
+              selectedChannel != null
+                  ? Conversation(id: selectedChannel)
+                  : null);
           _completer.complete(result);
         }
       } else {
@@ -383,8 +387,8 @@ class PaperCupsController {
     return _completer.future;
   }
 
-  Future<PhoenixSocket> retry(Props props, {PhoenixSocketOptions options}) {
-    PhoenixSocket socket = _socket;
+  Future<PhoenixSocket?> retry(Props props, {PhoenixSocketOptions? options}) {
+    PhoenixSocket? socket = _socket;
     _logger.log(Level.FINEST, "retry connection....");
     if (socket != null && socket.isConnected == false) {
       _socket = null;
@@ -401,8 +405,8 @@ class PaperCupsController {
   PapercupsMessage messageFromString(Props props) {
     return PapercupsMessage(
       body: props.greeting,
-      sentAt: DateTime.now(),
-      createdAt: DateTime.now(),
+      sentAt: DateTime.now().toUtc(),
+      createdAt: DateTime.now().toUtc(),
       accountId: props.accountId,
       user: User(
         fullName: props.companyName,
@@ -412,22 +416,22 @@ class PaperCupsController {
     );
   }
 
-  void _shoutMessage(Props props, Conversation conv, PapercupsMessage msg,
+  void _shoutMessage(Props props, Conversation conv, PapercupsMessage? msg,
       Future<ConversationPair> channel) {
     _logger.log(Level.FINEST, "say message, add to conversation");
-    conv.messages.add(msg);
+    conv.messages?.add(msg!);
     stateStreamController.add(PaperCupsConversationMessageSendEvent(
-      messages: [msg],
+      messages: [msg!],
     ));
 
     //if (_socket != null && _socket.isConnected) {
     channel.then((value) {
       msg.customer = value.customer;
-      assert(msg != null && msg.customer != null);
+      assert(msg.customer != null);
       _logger.log(Level.FINEST,
-          "setCustomer.... ${msg.customer.id} ${msg.customer.externalId}");
+          "setCustomer.... ${msg.customer?.id} ${msg.customer?.externalId}");
       stateStreamController.add(PaperCupsConversationMessageSending(
-          channel: value.channel, conversationId: msg.conversationId));
+          channel: value.channel, conversationId: msg.conversationId!));
 
       if (value.channel == null) {
         _logger.log(
@@ -438,16 +442,16 @@ class PaperCupsController {
 
         try {
           var wasReplied = false;
-          var push = value.channel.push(
+          var push = value.channel!.push(
               "shout",
               {
                 "body": msg.body,
-                "customer_id": msg.customer.id,
-                "sent_at": msg.createdAt.toIso8601String(),
+                "customer_id": msg.customer!.id,
+                "sent_at": msg.createdAt!.toIso8601String(),
               },
               new Duration(seconds: 20));
 
-          channel
+          channel!
               .onPushReply(PhoenixChannelEvent.custom("shout"))
               .then((message) {
             var replyProps = message.props[4] as Map<String, dynamic>;
@@ -464,8 +468,8 @@ class PaperCupsController {
                   ? DateTime.tryParse(replyProps["sent_at"])
                   : null;
               stateStreamController.add(PaperCupsConversationMessageDone(
-                  channel: channel, conversationId: msg.conversationId));
-              updateUserMetadataEx(props, msg.customer, msg.customer.id);
+                  channel: channel, conversationId: msg.conversationId!));
+              updateUserMetadataEx(props, msg.customer, msg.customer!.id!);
             }
           });
 
@@ -482,7 +486,7 @@ class PaperCupsController {
           if (!(e is ChannelTimeoutException)) {
             _logger.log(Level.FINEST, "exception: $e ${e}");
             stateStreamController.add(PaperCupsConversationMessageDone(
-                channel: value.channel, conversationId: msg.conversationId));
+                channel: value.channel, conversationId: msg.conversationId!));
           }
         }
       }
@@ -502,13 +506,13 @@ class PaperCupsController {
     PapercupsMessage msg,
     PaperCupsViewController view,
   ) async {
-    if (_socket == null || _socket.isConnected == false) {
+    if (_socket?.isConnected ?? false) {
       stateStreamController.addError("Not connected");
       return;
     }
 
     _logger.log(Level.FINEST, "conversationChannel...");
-    PhoenixChannel conversationChannel =
+    PhoenixChannel? conversationChannel =
         _conversationChannel.containsKey(conv.id)
             ? _conversationChannel[conv.id]
             : null;
@@ -542,8 +546,8 @@ class PaperCupsViewController {
   // internal controller associated for this view
   final PaperCupsController _controller;
   // intnernal conversation object associated with this view
-  Conversation _conversation;
-  Conversation get conversation {
+  Conversation? _conversation;
+  Conversation? get conversation {
     return _conversation;
   }
 
@@ -552,14 +556,13 @@ class PaperCupsViewController {
   }
 
   void disposeA() {
-    if (stateMessageController != null) stateMessageController.close();
+    stateMessageController.close();
   }
 
   Future<bool> selectChannel(
-      Conversation prevConversation, Conversation conversation) async {
-    String previousConversationId =
-        prevConversation != null ? prevConversation.id : null;
-    String newConversationId = conversation != null ? conversation.id : null;
+      Conversation? prevConversation, Conversation? conversation) async {
+    String? previousConversationId = prevConversation?.id ?? null;
+    String? newConversationId = conversation?.id ?? null;
     _logger.log(
         Level.FINEST, "selecting conversation id: ${newConversationId}");
     //_messages.clear();
@@ -567,7 +570,7 @@ class PaperCupsViewController {
       //_messages.addAll(conversations[conversationId].messages);
       _controller.setConversationChannel(previousConversationId, null);
       _controller.stateStreamController.add(PaperCupsConversationUnloadEvent(
-          conversationId: previousConversationId));
+          conversationId: previousConversationId!));
 
       //onconversationunloaded(previousConversationId);
       //_conversationId = conversationId;
@@ -577,14 +580,14 @@ class PaperCupsViewController {
         _controller.setConversationChannel(newConversationId, null);
       } else {
         _logger.log(Level.FINEST, "join conversation id: ${newConversationId}");
-        _conversation = _controller.conversations[newConversationId];
-        _controller.join(_controller.conversations[newConversationId]);
+        _conversation = _controller.conversations[newConversationId]!;
+        _controller.join(_controller.conversations[newConversationId]!);
       }
 
       _controller.stateStreamController.add(
           PaperCupsConversationLoadEvent(conversationId: newConversationId));
       _controller.stateStreamController
-          .add(PaperCupsConversationNavigatedEvent(_conversation, false));
+          .add(PaperCupsConversationNavigatedEvent(_conversation!, false));
       //onconversationloaded(newConversationId);
       return true;
     } else {
@@ -594,18 +597,18 @@ class PaperCupsViewController {
           conversationId: previousConversationId));
       //onconversationunloaded(previousConversationId);
       //_conversationId = conversationId;
-      _conversation = conversation;
+      _conversation = conversation!;
       _controller.setConversationChannel(newConversationId, null);
       //onconversationloaded(newConversationId);
       _controller.stateStreamController.add(
           PaperCupsConversationLoadEvent(conversationId: newConversationId));
       _controller.stateStreamController
-          .add(PaperCupsConversationNavigatedEvent(_conversation, false));
+          .add(PaperCupsConversationNavigatedEvent(_conversation!, false));
       return false;
     }
   }
 
-  void navigate(Props props, String conversationId) {
+  void navigate(Props props, String? conversationId) {
     if (_controller.conversations.containsKey(conversationId)) {
       _controller
           .fetch(props, _controller.conversations[conversationId],
@@ -628,8 +631,8 @@ class PaperCupsViewController {
 }
 
 mixin PaperCupsMixin {
-  PaperCupsController messagingController;
-  PaperCupsViewController viewController;
+  late PaperCupsController messagingController;
+  late PaperCupsViewController viewController;
 
   void initStateA(Props props) {
     messagingController = PaperCupsController();
@@ -647,9 +650,9 @@ mixin PaperCupsThemeMixin {
   bool isDarkText(Props props, BuildContext context) {
     bool textBlack = false;
     if ((props.primaryColor != null &&
-            props.primaryColor.computeLuminance() > 0.5) ||
+            props.primaryColor!.computeLuminance() > 0.5) ||
         (props.primaryGradient != null &&
-            props.primaryGradient.colors[0].computeLuminance() > 0.5) ||
+            props.primaryGradient!.colors[0].computeLuminance() > 0.5) ||
         (props.primaryColor == null &&
             Theme.of(context).primaryColor.computeLuminance() > 0.5))
       textBlack = true;
@@ -683,10 +686,10 @@ class _PaperCupsWidgetState2 extends State<PaperCupsWidgetB>
 
     viewController.stateMessageController.stream.listen((event) {
       messagingController.say(
-          widget.props, viewController.conversation, event, viewController);
+          widget.props, viewController.conversation!, event, viewController);
     });
 
-    messagingController.sendingStatusChanged.listen((event) {
+    messagingController.sendingStatusChanged?.listen((event) {
       if (event is PaperCupsConversationMessageSending) {
         _sending = true;
         if (mounted) setState(() {});
@@ -716,9 +719,9 @@ class _PaperCupsWidgetState2 extends State<PaperCupsWidgetB>
       } else if (event is PaperCupsConversationMessageReceivedEvent) {
         rebuild(() {});
       } else if (event is PaperCupsConversationLoadEvent) {
-        onconversationloaded(event.conversationId);
+        onconversationloaded(event.conversationId!);
       } else if (event is PaperCupsConversationUnloadEvent) {
-        onconversationunloaded(event.conversationId);
+        onconversationunloaded(event.conversationId!);
       }
     });
 
@@ -754,7 +757,7 @@ class _PaperCupsWidgetState2 extends State<PaperCupsWidgetB>
   @override
   void dispose() {
     super.disposeA();
-    if (_controller != null) _controller.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -799,7 +802,7 @@ class _PaperCupsWidgetState2 extends State<PaperCupsWidgetB>
     super.didChangeDependencies();
   }
 
-  void openchat({String conversationId}) {
+  void openchat({String? conversationId}) {
     if (conversationId == null) {
       Navigator.push(
         context,
@@ -822,7 +825,7 @@ class _PaperCupsWidgetState2 extends State<PaperCupsWidgetB>
 
   void setConversation(Conversation c) {
     _logger.log(
-        Level.FINEST, "setConversation.... ${c.id} ${c.messages.length}");
+        Level.FINEST, "setConversation.... ${c.id} ${c.messages!.length}");
     if (mounted) setState(() {});
   }
 
@@ -830,22 +833,20 @@ class _PaperCupsWidgetState2 extends State<PaperCupsWidgetB>
   void rebuild(void Function() fn, {bool stateMsg = false, animate = false}) {
     _sending = stateMsg;
     if (mounted) setState(fn);
-    Conversation conversation = viewController.conversation;
+    Conversation conversation = viewController.conversation!;
 
     if (animate &&
         mounted &&
-        conversation != null &&
         conversation.messages != null &&
-        conversation.messages.isNotEmpty &&
+        conversation.messages!.isNotEmpty &&
         WidgetsBinding.instance != null &&
         _controller.hasClients) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_controller.position.maxScrollExtent != null)
-          _controller.animateTo(
-            _controller.position.maxScrollExtent,
-            curve: Curves.easeIn,
-            duration: Duration(milliseconds: 300),
-          );
+      WidgetsBinding.instance?.addPostFrameCallback((_) {
+        _controller.animateTo(
+          _controller.position.maxScrollExtent,
+          curve: Curves.easeIn,
+          duration: Duration(milliseconds: 300),
+        );
       });
     }
   }
@@ -856,20 +857,20 @@ class _PaperCupsWidgetState2 extends State<PaperCupsWidgetB>
         child: ListView.builder(
           itemCount: messagingController.conversations.length,
           itemBuilder: (context, index) {
-            Conversation conversation = messagingController.conversations[
+            Conversation? conversation = messagingController.conversations[
                 messagingController.conversations.keys.elementAt(index)];
 
-            String conversationId = conversation != null ? conversation.id : "";
+            String conversationId = conversation?.id ?? "";
             String body = conversation != null
                 ? conversation.messages != null
-                    ? conversation.messages.isNotEmpty
-                        ? conversation.messages[0].body
+                    ? conversation.messages!.isNotEmpty
+                        ? conversation.messages![0].body!
                         : ""
                     : ""
                 : "";
             String sentAt = conversation != null
                 ? conversation.createdAt != null
-                    ? conversation.createdAt
+                    ? conversation.createdAt!
                     : ""
                 : "";
             return InkWell(
@@ -900,7 +901,7 @@ class _PaperCupsWidgetState2 extends State<PaperCupsWidgetB>
                   ),
                   Text(
                     "No Connection",
-                    style: Theme.of(context).textTheme.headline5.copyWith(
+                    style: Theme.of(context).textTheme.headline5?.copyWith(
                           color: Colors.grey,
                         ),
                   ),
@@ -959,9 +960,7 @@ class _PaperCupsWidgetState2 extends State<PaperCupsWidgetB>
                 Expanded(
                   child: ChatMessages(
                     widget.props,
-                    viewController.conversation != null
-                        ? viewController.conversation.messages
-                        : [],
+                    viewController.conversation?.messages ?? [],
                     _controller,
                     _sending,
                     widget.dateLocale,
@@ -976,6 +975,8 @@ class _PaperCupsWidgetState2 extends State<PaperCupsWidgetB>
                     gradientRight: null,
                     colorTextLeft: textBlack ? Colors.black : Colors.white,
                     colorTextRight: textBlack ? Colors.black : Colors.white,
+                    borderRadiusGeometryLeft: BorderRadius.circular(4),
+                    borderRadiusGeometryRight: BorderRadius.circular(4),
                     copied: (String text) {
                       HapticFeedback.vibrate();
                       Clipboard.setData(ClipboardData(text: text));
@@ -1015,8 +1016,7 @@ class _PaperCupsWidgetState2 extends State<PaperCupsWidgetB>
                   clipBehavior:
                       widget.floatingSendMessage ? Clip.antiAlias : Clip.none,
                   child: (widget.props.requireEmailUpfront &&
-                          (messagingController._customer == null ||
-                              messagingController._customer.email == null))
+                          (messagingController._customer?.email == null))
                       ? RequireEmailUpfront(setCustomer, widget.props,
                           textBlack, !widget.floatingSendMessage)
                       : SendMessage(

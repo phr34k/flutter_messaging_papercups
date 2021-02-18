@@ -1,6 +1,6 @@
-import 'package:papercups_flutter/models/customer.dart';
-import 'package:papercups_flutter/models/conversation.dart';
-import 'package:papercups_flutter/models/message.dart';
+import 'customer.dart';
+import 'conversation.dart';
+import 'message.dart';
 import 'package:phoenix_socket/phoenix_socket.dart';
 
 class PaperCupsEvent {}
@@ -30,8 +30,8 @@ class PaperCupsConversationStartedEvent extends PaperCupsEvent {}
 class PaperCupsConversationClosedEvent extends PaperCupsEvent {}
 
 class PaperCupsConversationEvent extends PaperCupsEvent {
-  final String conversationId;
-  final PhoenixChannel channel;
+  final String? conversationId;
+  final PhoenixChannel? channel;
   PaperCupsConversationEvent({
     this.channel,
     this.conversationId,
@@ -41,77 +41,73 @@ class PaperCupsConversationEvent extends PaperCupsEvent {
 class PaperCupsConversationFinishedEvent extends PaperCupsEvent {}
 
 class PaperCupsConversationUnloadEvent extends PaperCupsConversationEvent {
-  final String conversationId;
-  final PhoenixChannel channel;
   PaperCupsConversationUnloadEvent({
-    this.channel,
-    this.conversationId,
-  });
+    String? conversationId,
+    PhoenixChannel? channel,
+  }) : super(conversationId: conversationId, channel: channel);
 }
 
 class PaperCupsConversationLoadEvent extends PaperCupsConversationEvent {
-  final String conversationId;
-  final PhoenixChannel channel;
   PaperCupsConversationLoadEvent({
-    this.channel,
-    this.conversationId,
-  });
+    String? conversationId,
+    PhoenixChannel? channel,
+  }) : super(conversationId: conversationId, channel: channel);
 }
 
 class PaperCupsConversationConnectedEvent extends PaperCupsConversationEvent {
   PaperCupsConversationConnectedEvent({
-    PhoenixChannel channel,
-    String conversationId,
-  }) : super(channel: channel, conversationId: conversationId);
+    String? conversationId,
+    PhoenixChannel? channel,
+  }) : super(conversationId: conversationId, channel: channel);
 }
 
 class PaperCupsConversationDisconnectedEvent
     extends PaperCupsConversationEvent {
   PaperCupsConversationDisconnectedEvent({
-    PhoenixChannel channel,
-    String conversationId,
-  }) : super(channel: channel, conversationId: conversationId);
+    String? conversationId,
+    PhoenixChannel? channel,
+  }) : super(conversationId: conversationId, channel: channel);
 }
 
 class PaperCupsConversationMessageStatusEvent
     extends PaperCupsConversationEvent {
   PaperCupsConversationMessageStatusEvent({
-    PhoenixChannel channel,
-    String conversationId,
-  }) : super(channel: channel, conversationId: conversationId);
+    String? conversationId,
+    PhoenixChannel? channel,
+  }) : super(conversationId: conversationId, channel: channel);
 }
 
 class PaperCupsConversationMessageSendEvent extends PaperCupsConversationEvent {
   List<PapercupsMessage> messages;
   PaperCupsConversationMessageSendEvent({
-    PhoenixChannel channel,
-    String conversationId,
-    this.messages,
-  }) : super(channel: channel, conversationId: conversationId);
+    String? conversationId,
+    PhoenixChannel? channel,
+    required this.messages,
+  }) : super(conversationId: conversationId, channel: channel);
 }
 
 class PaperCupsConversationMessageReceivedEvent
     extends PaperCupsConversationEvent {
   List<PapercupsMessage> messages;
   PaperCupsConversationMessageReceivedEvent({
-    PhoenixChannel channel,
-    String conversationId,
-    this.messages,
-  }) : super(channel: channel, conversationId: conversationId);
+    String? conversationId,
+    PhoenixChannel? channel,
+    required this.messages,
+  }) : super(conversationId: conversationId, channel: channel);
 }
 
 class PaperCupsConversationMessageSending
     extends PaperCupsConversationMessageStatusEvent {
   PaperCupsConversationMessageSending({
-    PhoenixChannel channel,
-    String conversationId,
-  }) : super(channel: channel, conversationId: conversationId);
+    String? conversationId,
+    PhoenixChannel? channel,
+  }) : super(conversationId: conversationId, channel: channel);
 }
 
 class PaperCupsConversationMessageDone
     extends PaperCupsConversationMessageStatusEvent {
   PaperCupsConversationMessageDone({
-    PhoenixChannel channel,
-    String conversationId,
-  }) : super(channel: channel, conversationId: conversationId);
+    String? conversationId,
+    PhoenixChannel? channel,
+  }) : super(conversationId: conversationId, channel: channel);
 }

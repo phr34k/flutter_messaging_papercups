@@ -3,20 +3,18 @@ import 'dart:convert';
 import 'package:http/http.dart';
 import '../models/models.dart';
 
-Future<PapercupsCustomer> getCustomerDetails(
+Future<PapercupsCustomer?> getCustomerDetails(
   Props p,
-  PapercupsCustomer c,
+  PapercupsCustomer? c,
   Function sc, {
-  Client client,
+  Client? client,
 }) async {
   if (client == null) {
     client = Client();
   }
   try {
     var timeNow = DateTime.now().toIso8601String();
-    var metadata = p.customer != null && p.customer.otherMetadata != null
-        ? p.customer.otherMetadata
-        : {};
+    var metadata = p.customer?.otherMetadata ?? {};
     var jsonString = jsonEncode(
       {
         "customer": {
@@ -31,7 +29,7 @@ Future<PapercupsCustomer> getCustomerDetails(
       },
     );
     var res = await client.post(
-      "https://" + p.baseUrl + "/api/customers",
+      Uri.parse("https://" + p.baseUrl + "/api/customers"),
       headers: {
         "content-type": "application/json",
       },

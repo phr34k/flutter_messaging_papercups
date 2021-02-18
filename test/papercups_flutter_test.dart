@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_import
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
@@ -5,8 +7,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:mockito/mockito.dart';
-import 'package:papercups_flutter/models/models.dart';
-import 'package:papercups_flutter/utils/utils.dart';
+import '../lib/models/models.dart';
+import '../lib/utils/utils.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -88,7 +90,7 @@ void main() {
       expect(props.primaryColor, Color(0xffffff));
       expect(props.requireEmailUpfront, true);
       expect(props.scrollEnabled, true);
-      expect(props.customer.toJsonString(),
+      expect(props.customer?.toJsonString(),
           '{"name":null,"email":null,"external_id":null}');
       expect(props.primaryGradient, null);
       expect(props.subtitle, "How can we help you?");
@@ -185,7 +187,7 @@ void main() {
 
       when(
         client.post(
-          'https://${props.baseUrl}/api/conversations',
+          Uri.parse('https://${props.baseUrl}/api/conversations'),
           headers: anyNamed('headers'),
           body: anyNamed('body'),
         ),
@@ -197,13 +199,13 @@ void main() {
 
       verify(
         client.post(
-          'https://${props.baseUrl}/api/conversations',
+          Uri.parse('https://${props.baseUrl}/api/conversations'),
           headers: anyNamed('headers'),
           body: anyNamed('body'),
         ),
       ).called(1);
       verify(client.close()).called(1);
-      verify(sc(details)).called(1);
+      verify(sc(details!)).called(1);
 
       expect(details.id, equals(conv.id));
       expect(details.accountId, equals(conv.accountId));
@@ -213,7 +215,7 @@ void main() {
       final client = MockClient();
       when(
         client.post(
-          'https://${props.baseUrl}/api/conversations',
+          Uri.parse('https://${props.baseUrl}/api/conversations'),
           headers: anyNamed('headers'),
           body: anyNamed('body'),
         ),
@@ -229,7 +231,7 @@ void main() {
 
       verify(
         client.post(
-          'https://${props.baseUrl}/api/conversations',
+          Uri.parse('https://${props.baseUrl}/api/conversations'),
           headers: anyNamed('headers'),
           body: anyNamed('body'),
         ),
@@ -249,10 +251,10 @@ void main() {
           "id": customer.id,
           "email": customer.email,
           "external_id": customer.externalId,
-          "created_at": customer.createdAt.toIso8601String(),
-          "first_seen": customer.firstSeen.toIso8601String(),
-          "last_seen": customer.lastSeen.toIso8601String(),
-          "updated_at": customer.updatedAt.toIso8601String(),
+          "created_at": customer.createdAt?.toIso8601String(),
+          "first_seen": customer.firstSeen?.toIso8601String(),
+          "last_seen": customer.lastSeen?.toIso8601String(),
+          "updated_at": customer.updatedAt?.toIso8601String(),
           "name": customer.name,
           "phone": customer.phone,
         }
@@ -260,13 +262,13 @@ void main() {
 
       when(
         client.post(
-          'https://${props.baseUrl}/api/customers',
+          Uri.parse('https://${props.baseUrl}/api/customers'),
           headers: anyNamed('headers'),
           body: anyNamed('body'),
         ),
       ).thenAnswer((_) async => http.Response(res, 200));
 
-      final PapercupsCustomer c = await getCustomerDetails(
+      final PapercupsCustomer? c = await getCustomerDetails(
         props,
         customer,
         sc,
@@ -275,14 +277,14 @@ void main() {
 
       verify(
         client.post(
-          'https://${props.baseUrl}/api/customers',
+          Uri.parse('https://${props.baseUrl}/api/customers'),
           headers: anyNamed('headers'),
           body: anyNamed('body'),
         ),
       ).called(1);
       verify(client.close()).called(1);
 
-      expect(c.id, equals(customer.id));
+      expect(c!.id, equals(customer.id));
       expect(c.lastSeen, equals(customer.lastSeen));
     });
 
@@ -290,13 +292,13 @@ void main() {
       final client = MockClient();
       when(
         client.post(
-          'https://${props.baseUrl}/api/customers',
+          Uri.parse('https://${props.baseUrl}/api/customers'),
           headers: anyNamed('headers'),
           body: anyNamed('body'),
         ),
       ).thenThrow(HttpException('Request failed'));
 
-      final PapercupsCustomer c = await getCustomerDetails(
+      final PapercupsCustomer? c = await getCustomerDetails(
         props,
         customer,
         () => {},
@@ -305,7 +307,7 @@ void main() {
 
       verify(
         client.post(
-          'https://${props.baseUrl}/api/customers',
+          Uri.parse('https://${props.baseUrl}/api/customers'),
           headers: anyNamed('headers'),
           body: anyNamed('body'),
         ),
@@ -325,10 +327,10 @@ void main() {
           "customer_id": customer.id,
           "email": customer.email,
           "external_id": customer.externalId,
-          "created_at": customer.createdAt.toIso8601String(),
-          "first_seen": customer.firstSeen.toIso8601String(),
-          "last_seen": customer.lastSeen.toIso8601String(),
-          "updated_at": customer.updatedAt.toIso8601String(),
+          "created_at": customer.createdAt?.toIso8601String(),
+          "first_seen": customer.firstSeen?.toIso8601String(),
+          "last_seen": customer.lastSeen?.toIso8601String(),
+          "updated_at": customer.updatedAt?.toIso8601String(),
           "name": customer.name,
           "phone": customer.phone,
         }
@@ -347,7 +349,7 @@ void main() {
         ),
       ).thenAnswer((_) async => http.Response(res, 200));
 
-      final PapercupsCustomer c = await getCustomerDetailsFromMetadata(
+      final PapercupsCustomer? c = await getCustomerDetailsFromMetadata(
         props,
         customer,
         sc,
@@ -366,7 +368,7 @@ void main() {
           ),
         ),
       ).called(1);
-      verify(sc(c)).called(1);
+      verify(sc(c!)).called(1);
       verify(client.close()).called(1);
 
       expect(c.id, equals(customer.id));
@@ -389,7 +391,7 @@ void main() {
         ),
       ).thenThrow(HttpException('Request failed'));
 
-      final PapercupsCustomer c = await getCustomerDetailsFromMetadata(
+      final PapercupsCustomer? c = await getCustomerDetailsFromMetadata(
         props,
         customer,
         sc,
@@ -409,7 +411,7 @@ void main() {
         ),
       ).called(1);
       verify(client.close()).called(1);
-      verify(sc(c)).called(1);
+      verify(sc(c!)).called(1);
 
       expect(c, equals(null));
     });
@@ -427,23 +429,23 @@ void main() {
               {
                 "account_id": message.accountId,
                 "body": message.body,
-                "created_at": message.createdAt.toIso8601String(),
-                "sent_at": message.sentAt.toIso8601String(),
+                "created_at": message.createdAt!.toIso8601String(),
+                "sent_at": message.sentAt!.toIso8601String(),
               },
               {
                 "accound_id": message.accountId,
                 "body": message.body,
-                "created_at": message.createdAt.toIso8601String(),
-                "sent_at": message.sentAt.toIso8601String(),
+                "created_at": message.createdAt!.toIso8601String(),
+                "sent_at": message.sentAt!.toIso8601String(),
               }
             ],
             "customer": {
-              "created_at": customer.createdAt.toIso8601String(),
+              "created_at": customer.createdAt!.toIso8601String(),
               "email": customer.email,
               "external_id": customer.externalId,
-              "first_seen": customer.firstSeen.toIso8601String(),
-              "last_seen": customer.lastSeen.toIso8601String(),
-              "updated_at": customer.updatedAt.toIso8601String(),
+              "first_seen": customer.firstSeen!.toIso8601String(),
+              "last_seen": customer.lastSeen!.toIso8601String(),
+              "updated_at": customer.updatedAt!.toIso8601String(),
               "name": customer.name,
               "phone": customer.phone
             }

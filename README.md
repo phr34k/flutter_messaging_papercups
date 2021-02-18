@@ -1,44 +1,89 @@
-![logo](https://raw.githubusercontent.com/papercups-io/papercups_flutter/next/images/logo.svg)
-[![pub package](https://img.shields.io/pub/v/papercups_flutter.svg?label=papercups_flutter&color=blue)](https://pub.dev/packages/papercups_flutter) [![likes](https://badges.bar/papercups_flutter/likes)](https://pub.dev/packages/papercups_flutter/score)  [![style: effective dart](https://img.shields.io/badge/style-effective_dart-40c4ff.svg)](https://pub.dev/packages/effective_dart)
+# flutter_messaging_papercups
 
-# ⚠️⚠️⚠️ This branch is under active development. Do not use in production, to view the stable branch take a look at [main](https://github.com/papercups-io/papercups_flutter/tree/main/)⚠️⚠️⚠️
-
-## [Demo](https://papercups-demo.eduardom.dev/#/)
-
+This is an papercups backend implementation for the flutter_messaging_base library that aims to expose messaging backends in an unified approach. Making it easier for developers to integrate various backends in their app and provide rich customisations for it. This is an unofficial library, and is not supported by the origional authors.
 
 ## Main repository
-https://github.com/papercups-io/papercups
+
+https://github.com/phr34k/flutter_messaging_papercups
 
 ## Installing
-To get started simply add `papercups_flutter:` and the latest version to your pubspec.yaml.
-Then run `flutter pub get`
 
-🎉 Done, It's that simple.
+To get started simply add `flutter_messaging_papercups:` and the latest version to your pubspec.yaml. Then run `flutter pub get`
+
 ## Using the widget
-Integration with your app requires just a few lines of code, add the following widget wherever you want your papercups chat window to be:
-```Dart
-import 'package:papercups_flutter/papercups_flutter.dart';
 
-PaperCupsWidget(
-    props: Props(
-    accountId: "xxxxxxxx-xxxxxxx-xxxx-xxxxxx", //Your account id goes here.
-    ),
-),
+Integration with your app requires just a few lines of code. All that it requires is that you provide the `PapercupsSDK` provider, and the provider
+will help you generate page routes to navigate to your inbox or specific chats.
+
+```Dart
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_messaging_papercups/models/models.dart';
+import 'package:flutter_messaging_papercups/sdk.dart';
+import 'package:provider/provider.dart';
+
+import 'package:flutter_messaging_base/sdk.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+        providers: [
+          Provider<SDK>(
+              create: (_) => PapercupsSDK(
+                      props: Props(
+                    accountId: "843d8a14-8cbc-43c7-9dc9-3445d427ac4e",
+                    title: "Welcome!",
+                    //primaryColor: Color(0xff1890ff),
+                    primaryGradient: const LinearGradient(
+                      colors: [Colors.blue, Colors.lightBlueAccent],
+                    ),
+                    greeting: "Welcome to the test app!",
+                    subtitle: "How can we help you?",
+                    customer: kDebugMode
+                        ? CustomerMetadata(
+                            email: "flutter-plugin@test.com",
+                            externalId: "123456789876543",
+                            name: "Test App",
+                            otherMetadata: {
+                              "app": "example",
+                            },
+                          )
+                        : null,
+                  ))),
+        ],
+        builder: (_, __) => MaterialApp(
+              title: 'Flutter Demo',
+              theme: ThemeData(
+                primarySwatch: Colors.blue,
+              ),
+
+              initialRoute: '/',
+              onGenerateRoute: (route) {
+                if (route.name == '/') {
+                  return Provider.of<SDK>(_, listen: false).getDefaultInboxUI();
+                }
+
+                return null;
+              },
+
+              //home: const InboxPage(title: 'Flutter Demo Home Page'),
+            ));
+  }
+}
+
     
 ```
 That should get you up and running in just a few seconds ⚡️.
 
 ## Configuration
-
-### Available PaperCupsWidget arguments
-| Parameter | Type | Value | Default |
-| :--- | :--- | :----- | :------ |
-| **`props`** | `Props` | **Required**, here is where all of the config for the chat is contained.| N/A |
-| **`dateLocale`** | `String` |Locale for the date, use the locales from the `intl` package.| `"en-US"` |
-| **`timeagoLocale`** | `dynamic` | Check https://github.com/andresaraujo/timeago.dart/tree/master/timeago/lib/src/messages for the available classes.| N/A |
-| **`sendingText`** | `String` | Text to show while message is sending.| `Sending...` |
-| **`sentText`** | `String` | Text to show when the messgae is sent.| `Sent` |
-
 
 ### Available Props paramaters
 | Prop | Type | Value | Default |
@@ -64,12 +109,4 @@ That should get you up and running in just a few seconds ⚡️.
 | **`name`** | `string` | The customer's name | N/A |
 | **`otherMetadata`** | `Map<String, String>` | Extra metadata to pass such as OS info. | N/A |
 
-## Developing
 
-You will need flutter beta and flutter web support enabled.
-
-```
-flutter channel beta
-flutter upgrade
-flutter config --enable-web
-```

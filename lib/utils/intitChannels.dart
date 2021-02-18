@@ -6,11 +6,11 @@ import 'dart:async';
 
 /// This function creates the necessary channels, sockets and rooms for papercups to communicate.
 initChannelsEx(
-  PhoenixSocket _socket,
+  PhoenixSocket? _socket,
   Props props,
-  Completer<bool> completer,
+  Completer<bool>? completer,
 ) {
-  PhoenixChannel _channel;
+  PhoenixChannel? _channel;
   String channelName = 'room:' + props.accountId;
   if (_socket != null) {
     // Get the channel if it didn't exist already...
@@ -20,7 +20,7 @@ initChannelsEx(
       _channel.join().onReply(
         "ok",
         (res) {
-          if (completer != null) completer.complete();
+          completer?.complete(true);
         },
       );
     }

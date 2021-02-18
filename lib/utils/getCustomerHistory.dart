@@ -1,31 +1,32 @@
 //Imports
+// ignore_for_file: unnecessary_import
+
 import 'updateUserMetadata.dart';
 import '../models/models.dart';
-import '../papercups_flutter.dart';
 import 'dart:async';
 import 'dart:core';
 import 'getCustomerDetailsFromMetadata.dart';
 import 'getPastCustomerMessages.dart';
 import 'dart:developer' as developer;
 
-String findLastConversationId(Map<String, Conversation> msgs) {
+String? findLastConversationId(Map<String, Conversation> msgs) {
   List<PapercupsMessage> messages = [];
 
   msgs.forEach((key, value) {
-    messages.addAll(value.messages);
+    messages.addAll(value.messages!);
   });
 
   messages.sort((a, b) {
-    return a.createdAt.compareTo(b.createdAt);
+    return a.createdAt!.compareTo(b.createdAt!);
   });
 
   return messages.isNotEmpty ? messages[0].conversationId : null;
 }
 
 class Inbox {
-  bool failed;
-  String conversationId;
-  Map<String, Conversation> conversations;
+  bool failed = false;
+  String? conversationId;
+  Map<String, Conversation>? conversations;
 
   Inbox({
     this.conversationId,
@@ -36,9 +37,9 @@ class Inbox {
 /// This function is used to get the history.
 /// It also initializes the necessary funtions if the customer is known.
 Future<Inbox> getCustomerHistoryEx({
-  Props p,
-  PapercupsCustomer c,
-  Function setCustomer,
+  required Props p,
+  PapercupsCustomer? c,
+  Function? setCustomer,
 }) async {
   var result = Inbox();
   var failed = true;
@@ -64,7 +65,7 @@ Future<Inbox> getCustomerHistoryEx({
           //conversations.clear();
           //conversations.addAll(msgsIn);
           result.conversations = data["msgs"] as Map<String, Conversation>;
-          result.conversationId = findLastConversationId(result.conversations);
+          result.conversationId = findLastConversationId(result.conversations!);
         }
 
         /*
@@ -96,7 +97,7 @@ Future<Inbox> getCustomerHistoryEx({
           failed = true;
         } else if (nCust != customer) {
           // If the new customer is different then we update the details we have.
-          setCustomer(nCust);
+          setCustomer!(nCust);
           //rebuild(() {}, animate: true);
         }
       }

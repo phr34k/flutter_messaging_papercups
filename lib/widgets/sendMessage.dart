@@ -1,10 +1,11 @@
 //Imports
+// ignore_for_file: unnecessary_import
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../models/conversation.dart';
-import '../models/customer.dart';
 import 'package:phoenix_socket/phoenix_socket.dart';
 
 import '../models/classes.dart';
@@ -12,7 +13,7 @@ import '../models/classes.dart';
 /// Send message text box.
 class SendMessage extends StatefulWidget {
   SendMessage({
-    Key key,
+    Key? key,
     this.customer,
     this.setCustomer,
     this.setConversation,
@@ -22,24 +23,24 @@ class SendMessage extends StatefulWidget {
     this.socket,
     this.setState,
     this.messages,
-    this.sending,
-    @required this.props,
-    @required this.textBalck,
+    required this.sending,
+    required this.props,
+    required this.textBalck,
     this.showDivider = true,
     this.controller,
   }) : super(key: key);
 
   final Props props;
-  final PapercupsCustomer customer;
-  final Function setCustomer;
-  final Function setState;
-  final Function setConversation;
-  final Function setConversationChannel;
-  final PhoenixChannel conversationChannel;
-  final Conversation conversation;
-  final PhoenixSocket socket;
-  final List<PapercupsMessage> messages;
-  final StreamController<PapercupsMessage> controller;
+  final PapercupsCustomer? customer;
+  final Function? setCustomer;
+  final Function? setState;
+  final Function? setConversation;
+  final Function? setConversationChannel;
+  final PhoenixChannel? conversationChannel;
+  final Conversation? conversation;
+  final PhoenixSocket? socket;
+  final List<PapercupsMessage>? messages;
+  final StreamController<PapercupsMessage>? controller;
   final bool sending;
   final bool textBalck;
   final bool showDivider;
@@ -66,14 +67,14 @@ class _SendMessageState extends State<SendMessage> {
       _msgController,
       widget.customer,
       widget.props,
-      widget.setCustomer,
-      widget.conversation,
-      widget.setConversation,
-      widget.setConversationChannel,
+      widget.setCustomer!,
+      widget.conversation!,
+      widget.setConversation!,
+      widget.setConversationChannel!,
       widget.conversationChannel,
       widget.socket,
-      widget.setState,
-      widget.messages,
+      widget.setState!,
+      widget.messages!,
       widget.sending,
       widget.controller,
     );
@@ -147,24 +148,24 @@ class _SendMessageState extends State<SendMessage> {
 /// Send message function
 void _sendMessage(
   FocusNode fn,
-  TextEditingController tc,
-  PapercupsCustomer cu,
+  TextEditingController? tc,
+  PapercupsCustomer? cu,
   Props p,
   Function setCust,
   Conversation conv,
   Function setConv,
   Function setConvChannel,
-  PhoenixChannel conversationChannel,
-  PhoenixSocket socket,
+  PhoenixChannel? conversationChannel,
+  PhoenixSocket? socket,
   Function setState,
   List<PapercupsMessage> messages,
   bool sending,
-  StreamController<PapercupsMessage> controller,
+  StreamController<PapercupsMessage>? controller,
 ) {
-  final text = tc.text;
+  final text = tc?.text;
   fn.requestFocus();
-  if (text.trim().isEmpty || text == null) return null;
-  tc.clear();
+  if (text?.trim().isEmpty ?? false) return null;
+  tc?.clear();
   var timeNow = DateTime.now().toUtc();
   var msg = PapercupsMessage(
     body: text,

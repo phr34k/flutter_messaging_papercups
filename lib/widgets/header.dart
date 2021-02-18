@@ -6,14 +6,14 @@ import '../models/classes.dart';
 /// This header is shown at the top of the widget and can be customised.
 class Header extends StatelessWidget {
   const Header({
-    Key key,
-    @required this.props,
+    Key? key,
+    required this.props,
     this.closeAction,
-    @required this.textBlack,
+    required this.textBlack,
   }) : super(key: key);
 
   final Props props;
-  final Function closeAction;
+  final void Function()? closeAction;
   final bool textBlack;
 
   @override
